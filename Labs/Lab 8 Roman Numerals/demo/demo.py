@@ -254,7 +254,7 @@ class RomanCalculatorGUI:
         # Expression / status line (top small text)
         self.expr_label = tk.Label(
             display_frame, text="Enter Roman Numeral", anchor="e",
-            bg="#1e1e1e", fg="#aaaaaa", font=("Consolas", 11), padx=10, pady=2 #graphic design is my passion
+            bg="#1e1e1e", fg="#aaaaaa", font=("Segoe UI", 11), padx=10, pady=2 #graphic design is my passion
         )
         self.expr_label.pack(fill=tk.X)
 
@@ -268,7 +268,7 @@ class RomanCalculatorGUI:
         # Live Arabic/Decimal translation bar (bottom green text)
         self.arabic_display = tk.Label(
             display_frame, text="Decimal: 0", anchor="e",
-            bg="#1e1e1e", fg="#66bb6a", font=("Consolas", 11), padx=10, pady=4 #green is the color of money, and we like money
+            bg="#1e1e1e", fg="#66bb6a", font=("Segoe UI", 11), padx=10, pady=4 #green is the color of money, and we like money
         )
         self.arabic_display.pack(fill=tk.X)
 
@@ -334,7 +334,7 @@ class RomanCalculatorGUI:
 
         self.history_list = tk.Listbox(
             hist_frame, height=5, bg="#1e1e1e", fg="#e0e0e0",
-            font=("Consolas", 10), bd=2, relief=tk.SUNKEN
+            font=("Segoe UI", 10), bd=2, relief=tk.SUNKEN
         )
         self.history_list.pack(fill=tk.X, pady=2)
 
