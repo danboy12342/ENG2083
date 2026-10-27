@@ -276,32 +276,34 @@ class RomanCalculatorGUI:
         keypad_frame = tk.Frame(self.root, bg="#2b2b2b")
         keypad_frame.pack(fill=tk.BOTH, expand=True, padx=14, pady=4)
 
-        # 2D Array of Calculator Buttons: (Text, Row, Col, Colour)
+        # 2D Array of Calculator Buttons: (Text, Row, Col, Colour) im using "ti 89" style colors, so grey and white and then also using green and red for contrast
+        #i may if so inclined go to a casio style blue, white and black, not sure yet
         buttons = [
             # Row 0: Clear, Backspace, Vinculum brackets, Zero
             ("CLR", 0, 0, "#b71c1c"), ("DEL", 0, 1, "#c62828"),
             ("(",   0, 2, "#455a64"), (")",   0, 3, "#455a64"), ("N (0)", 0, 4, "#455a64"),
 
             # Row 1: High Roman numerals + Power/Root
-            ("D",   1, 0, "#37474f"), ("M",   1, 1, "#37474f"),
-            ("^",   1, 2, "#e65100"), ("SQRT",1, 3, "#e65100"), ("/",     1, 4, "#e65100"),
+            ("D",   1, 0, "#f0f0f0"), ("M",   1, 1, "#f0f0f0"),
+            ("^",   1, 2, "#8a8f99"), ("SQRT",1, 3, "#8a8f99"), ("/",     1, 4, "#8a8f99"),
 
             # Row 2: Mid Roman numerals + Multiply/Subtract (hehe mid)
-            ("L",   2, 0, "#37474f"), ("C",   2, 1, "#37474f"),
-            ("S (1/2)", 2, 2, "#5d4037"), ("*", 2, 3, "#e65100"), ("-",   2, 4, "#e65100"),
+            ("L",   2, 0, "#f0f0f0"), ("C",   2, 1, "#f0f0f0"),
+            ("S (1/2)", 2, 2, "#8a8f99"), ("*", 2, 3, "#8a8f99"), ("-",   2, 4, "#8a8f99"),
 
             # Row 3: Low Roman numerals + Fractions + Add/Equals
-            ("I",   3, 0, "#37474f"), ("V",   3, 1, "#37474f"), ("X",     3, 2, "#37474f"),
-            (": (2/12)", 3, 3, "#5d4037"), ("+", 3, 4, "#e65100"),
+            ("I",   3, 0, "#f0f0f0"), ("V",   3, 1, "#f0f0f0"), ("X",     3, 2, "#f0f0f0"),
+            (": (2/12)", 3, 3, "#8a8f99"), ("+", 3, 4, "#8a8f99"),
 
             # Row 4: dot + Negative toggle + Wide Equals button
-            (". (1/12)", 4, 0, "#5d4037"), ("+/-", 4, 1, "#455a64"),
+            (". (1/12)", 4, 0, "#8a8f99"), ("+/-", 4, 1, "#455a64"),
         ]
 
         #alright now we just need to iterate through the buttons and create them, which is pretty standard stuff
         for (text, r, c, color) in buttons:
             btn = tk.Button(
-                keypad_frame, text=text, bg=color, fg="white",
+                keypad_frame, text=text, bg=color,
+                fg="#111111" if color == "#f0f0f0" else "white", #we do this to have black on light
                 activebackground="#616161", activeforeground="white",
                 font=("Segoe UI", 11, "bold"), bd=1, relief=tk.RAISED,
                 command=lambda t=text: self.on_button_click(t)
