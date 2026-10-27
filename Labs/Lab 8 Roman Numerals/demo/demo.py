@@ -511,6 +511,7 @@ if __name__ == "__main__":
 
     #we launch the GUI
     try:
+        
         print("\n[+] Launching SPQR Roman Numeral Desktop Calculator GUI...")
         root = tk.Tk()
         app = RomanCalculatorGUI(root, engine)
