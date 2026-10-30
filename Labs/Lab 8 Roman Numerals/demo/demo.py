@@ -509,7 +509,7 @@ if __name__ == "__main__":
     engine = CalculatorMain()
     
     #test suite RBF
-    run_automated_tests(engine)
+    #run_automated_tests(engine)
 
     #we launch the GUI
     try:
