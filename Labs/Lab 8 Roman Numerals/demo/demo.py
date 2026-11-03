@@ -261,7 +261,7 @@ class RomanCalculatorGUI:
         # Main Roman Numeral display (large gold text, romans like gold)
         self.roman_display = tk.Label(
             display_frame, text="N", anchor="e",
-            bg="#1e1e1e", fg="#f5c542", font=("Georgia", 26, "bold"), padx=10, pady=4
+            bg="#1e1e1e", fg="#f5c542", font=("Segoe UI", 26, "bold"), padx=10, pady=4
         )
         self.roman_display.pack(fill=tk.X)
 
