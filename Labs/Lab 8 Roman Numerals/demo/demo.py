@@ -346,7 +346,7 @@ class RomanCalculatorGUI:
         # Build top expression line
         if self.first_operand and self.current_operator:
             self.expr_label.config(text="{} {}".format(self.first_operand, self.current_operator))
-        else:
+        else: 
             self.expr_label.config(text="Ready")
 
         # Try live-validating the current input to show its decimal value
@@ -514,10 +514,9 @@ if __name__ == "__main__":
     #we launch the GUI
     try:
         
-        print("\n[+] Launching SPQR Roman Numeral Desktop Calculator GUI...")
         root = tk.Tk()
         app = RomanCalculatorGUI(root, engine)
         root.mainloop()
     except tk.TclError: #in the event of headless
-        print("\n[!] No desktop display detected (running on headless server).")
+        print("No desktop display found")
         print("    Use engine.evaluate(num1, op, num2) directly in notebook cells.") #(me when i SSH into my house because the uni pc is that bad)
