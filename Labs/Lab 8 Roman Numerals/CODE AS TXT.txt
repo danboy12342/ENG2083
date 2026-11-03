@@ -1,0 +1,473 @@
+001: '''
+002:     Roman Numeral Calculator Engine - a final project assuming Python 3.8+ and Tkinter GUI
+003:     m̶a̶y̶ ̶s̶w̶i̶t̶c̶h̶ ̶t̶o̶ ̶o̶n̶l̶i̶n̶e̶ ̶j̶u̶p̶y̶t̶e̶r̶n̶o̶t̶e̶ ̶v̶e̶r̶s̶i̶o̶n̶ ̶u̶s̶i̶n̶g̶ ̶i̶p̶y̶w̶i̶d̶g̶e̶t̶s̶ ̶i̶f̶ ̶a̶s̶k̶e̶d, ive been told Tkinter is okay
+004:     nb: some comments may be from the older "proof of concept" version before I fully decided to go with this brief over the ETP lab.
+005:     Daniel Mui - 2962389m
+006: '''
+007: 
+008: #import tariffs
+009: import math
+010: import tkinter as tk
+011: from tkinter import messagebox
+012: 
+013: #init the class
+014: class CalculatorMain:
+015: 
+016:     def __init__(self):
+017:         # begin the dictionaries for roman numeral conversion
+018:         
+019:         #dict 1 : Roman -> Int value
+020:         self.roman_to_int_dict = {
+021:             'I': 1, 'V': 5, 'X': 10, 'L': 50,
+022:             'C': 100, 'D': 500, 'M': 1000
+023:         }
+024: 
+025:         # dict 2 : Int value -> Roman
+026:         self.int_to_roman_dict = {
+027:             1000: 'M',  900: 'CM',
+028:             500:  'D',  400: 'CD',
+029:             100:  'C',  90:  'XC',
+030:             50:   'L',  40:  'XL',
+031:             10:   'X',  9:   'IX',
+032:             5:    'V',  4:   'IV',
+033:             1:    'I'
+034:         }
+035: 
+036:         # dict 3 : base-12 -> Roman
+037:         self.twelfths_to_roman_dict = {
+038:             0:  '',
+039:             1:  '.',      # 1/12 (uncia)
+040:             2:  ':',      # 2/12 (1/6, sextans)
+041:             3:  ':.',     # 3/12 (1/4, quadrans)
+042:             4:  '::',     # 4/12 (1/3, triens)
+043:             5:  '::.',    # 5/12 (quincunx)
+044:             6:  'S',      # 6/12 (1/2, semis)
+045:             7:  'S.',     # 7/12 (septunx)
+046:             8:  'S:',     # 8/12 (2/3, bes)
+047:             9:  'S:.',    # 9/12 (3/4, dodrans)
+048:             10: 'S::',    # 10/12 (5/6, dextans)
+049:             11: 'S::.'    # 11/12 (deunx)
+050:         }
+051: 
+052:     #now we define the basic roman numeral conversion functions, which are used by the main funcs
+053:     
+054:     # Basic Roman convert funcs (1-3999)
+055:     def _basic_roman_to_int(self, roman_str):
+056:         total = 0
+057:         n = len(roman_str)
+058:         for i in range(n): #for loop to iterate through the string
+059:             ch = roman_str[i]
+060:             if ch not in self.roman_to_int_dict:
+061:                 raise ValueError("Invalid symbol '{}' in Roman numeral.".format(ch)) #we use a valueerror to catch bad people (who use bad symb)
+062:             
+063:             val = self.roman_to_int_dict[ch]
+064:             # first rule of roman, the subtractive notation
+065:             if (i + 1 < n) and (val < self.roman_to_int_dict.get(roman_str[i + 1], 0)):
+066:                 total -= val
+067:             else:
+068:                 total += val
+069:         return total
+070: 
+071:     def _basic_int_to_roman(self, num):
+072:         #Converts a basic int into its numeral
+073:         result = ""
+074:         for val, symbol in self.int_to_roman_dict.items(): #we use the items() method to get the key-value pairs from the dictionary
+075:             count = num // val #items allows us to iterate through the dictionary and get the key-value pairs
+076:             result += symbol * count
+077:             num = num % val #we then use mod to get the remain and continue
+078:         return result
+079: 
+080:     def number_to_roman(self, number):
+081:         #now convert any float / int into a full numeral str
+082:         if abs(number) < 1e-9: #we have a rather large upper limit
+083:             return "N" #this gives us us the zero numeral 
+084: 
+085:         sign = "-" if number < 0 else ""
+086:         number = abs(number) #we then take the absolute value of the number to make it positive for conv
+087: 
+088:         whole = int(math.floor(number + 1e-9))
+089:         frac = number - whole #then we get the fractional part of the number
+090: 
+091:         # Convert fractional part to nearest twelfth (uncia)
+092:         twelfths = int(round(frac * 12))
+093:         if twelfths == 12:
+094:             whole += 1
+095:             twelfths = 0
+096: 
+097:         if whole > 3999999: #we account for overflow, as the vinculum system only allows for 3,999,999 as the max
+098:             raise OverflowError("Result exceeds maximum Vinculum limit (3,999,999).") #spell check did not know what this word meant
+099: 
+100:         # Build whole number part
+101:         roman_whole = ""
+102:         if whole >= 4000:
+103:             thousands = whole // 1000 #here we use integer division to get the number of thousands or hundereds of thousands
+104:             remainder = whole % 1000
+105:             roman_whole = "({})".format(self._basic_int_to_roman(thousands)) #now we use format to build the vinculum part of the numeral
+106:             if remainder > 0:
+107:                 roman_whole += self._basic_int_to_roman(remainder) #then for any remainder we just use the basic conversion function
+108:         elif whole > 0:
+109:             roman_whole = self._basic_int_to_roman(whole) #then we call §the basic conversion function for any number less than 4000
+110: 
+111:         # Build fractional part
+112:         roman_frac = self.twelfths_to_roman_dict[twelfths]
+113: 
+114:         #here we return the final numeral, with the sign, whole part, and fractional part
+115:         if roman_whole == "" and roman_frac == "":
+116:             return "N"
+117:         return sign + roman_whole + roman_frac
+118: 
+119:     #new function to convert roman numeral to number, with validation (yipeeeee)
+120: 
+121:     def roman_to_number(self, roman_str):
+122:         """
+123:         Parses and strictly validates a Roman numeral string (including negatives,
+124:         Vinculum brackets, and base-12 fractions) into a Python float/int.
+125:         """
+126:         raw_input = roman_str.strip().upper() #we have to strip out the whitespace and make it uppercase to make it easier to parse
+127:         if not raw_input:
+128:             raise ValueError("Empty Roman numeral input.") #then we check for empty input and raise a valueerror if it is empty
+129: 
+130:         if raw_input == "N": #we can now handle the zero numeral
+131:             return 0
+132: 
+133:         # Check for negative sign
+134:         sign = 1
+135:         s = raw_input
+136:         if s.startswith("-"):
+137:             sign = -1
+138:             s = s[1:].strip()
+139: 
+140:         # Extract any trailing base-12 fraction characters ('S', ':', '.') you can read more about this at [cite]
+141:         frac_chars = ""
+142:         while len(s) > 0 and s[-1] in ('S', ':', '.'): #pretty standard while loop to extract the fraction characters from the end of the string
+143:             frac_chars = s[-1] + frac_chars
+144:             s = s[:-1]
+145: 
+146:         twelfths = 0 #then we convert the fraction characters into a number of twelfths
+147:         for ch in frac_chars:
+148:             if ch == 'S':
+149:                 twelfths += 6
+150:             elif ch == ':':
+151:                 twelfths += 2
+152:             elif ch == '.':
+153:                 twelfths += 1
+154:         if twelfths >= 12:
+155:             raise ValueError("Invalid fraction '{}' (>= 12/12).".format(frac_chars)) #just in case we have one more valueerror
+156: 
+157:         # Parse whole number part
+158:         whole_val = 0
+159:         if len(s) > 0:
+160:             if s.startswith("("):
+161:                 # Handle Vinculum brackets (thousands separator)
+162:                 if ")" not in s:
+163:                     raise ValueError("Unclosed Vinculum bracket '('.")
+164:                 close_idx = s.index(")")
+165:                 thousands_part = s[1:close_idx]
+166:                 remainder_part = s[close_idx + 1:]
+167:                 if not thousands_part: #in cases where the thousands is empty 
+168:                     raise ValueError("Empty Vinculum brackets '()'.")
+169:                 whole_val = self._basic_roman_to_int(thousands_part) * 1000 #then we multiply the thousands part by 1000 to get the whole value
+170:                 if remainder_part:
+171:                     whole_val += self._basic_roman_to_int(remainder_part)
+172:             else:
+173:                 whole_val = self._basic_roman_to_int(s) #or we can just use the basic conversion function if there are no vinculum brackets
+174: 
+175:         total = sign * (whole_val + (twelfths / 12.0)) #take the sign into account and add the whole value and the fractional value together to get the total
+176: 
+177:         # Canonical Round-Trip Validation!
+178:         canonical = self.number_to_roman(total)
+179:         if canonical != raw_input:
+180:             raise ValueError("not valid roman notation")
+181: 
+182:         return int(total) if twelfths == 0 else total #return the total as an int if there are no twelfths, otherwise return it as a float
+183: 
+184:     #new function; this time we are going to evaluate the expression, which is the main function of the calculator
+185:     #this is the main function that takes in the two roman numerals and the operator and returns the result in both roman and decimal form
+186:     #it also handles the square root operator, which is a unary operator, and the other operators are binary operators
+187: 
+188:     def evaluate(self, num1_str, operator, num2_str=None):
+189:         # we beign by executing an operation (+, -, *, /, ^, SQRT) and returns (roman_res, dec_res).
+190:         val1 = self.roman_to_number(num1_str)
+191: 
+192:         if operator == "SQRT": #we handle the square root operator, which is a unary operator
+193:             if val1 < 0:
+194:                 raise ValueError("Cannot take square root of a negative numeral.") #theres going to be a lot of valueerrors in this func, but they are all necessary to catch the user when they do something dumb, which is likely
+195:             res = math.sqrt(val1)
+196:             return self.number_to_roman(res), res
+197: 
+198:         val2 = self.roman_to_number(num2_str) #we then convert the second numeral to a number, which is necessary for the binary operators
+199: 
+200:         #and now we sit and do the actual math, which is the main part of the function, and we use a series of if statements to determine which operator to use
+201: 
+202:         if operator == '+': #i wont comment every single one of these, as they are all pretty self explanatory
+203:             res = val1 + val2
+204:         elif operator == '-':
+205:             res = val1 - val2
+206:         elif operator == '*':
+207:             res = val1 * val2
+208:         elif operator == '/':
+209:             if abs(val2) < 1e-9:
+210:                 raise ZeroDivisionError("Division by N (Zero) is undefined.") #this one is important, as we dont want to divide by zero, i am told this is bad
+211:             res = val1 / val2
+212:         elif operator == '^':
+213:             res = val1 ** val2
+214:         else:
+215:             raise ValueError("Unknown operator '{}'".format(operator)) #i mean, yeah just in case they try and idk like use grad
+216: 
+217:         return self.number_to_roman(res), res #and finally we spit out the result in both roman and decimal form
+218: 
+219: 
+220: 
+221: 
+223: # alright GUI time, this is going to be a bit more complicated, as python is in an incredible twist not the best front end framework
+224: 
+225: 
+226: #we start by inventig a gui class
+227: class RomanCalculatorGUI:
+228:     #now we want to build it up in stages, so we start with the init function, which is the main function that sets up the GUI and the calculator engine
+229: 
+230:     def __init__(self, root, engine): #we do a base innit 
+231:         self.root = root
+232:         self.engine = engine
+233:         self.root.title("SPQR - Roman Numeral Desktop Calculator") # Set the title of the window
+234:         self.root.geometry("460x620") #define an "REASONABLE WINDOW" im told 4k is still not standard 
+235:         self.root.configure(bg="#2b2b2b") # Set background color to dark gray as we live in the modern age of dark modes
+236:         self.root.resizable(False, False) # Disable window resizing for a fixed layout, this makes my life easier
+237: 
+238:         # Calculator state variables
+239:         self.first_operand = ""
+240:         self.current_operator = ""
+241:         self.current_input = ""
+242:         self.just_evaluated = False
+243: 
+244:         self._build_interface()
+245: 
+246:     def _build_interface(self):
+247:         # right now we must build a frame
+248:         display_frame = tk.Frame(self.root, bg="#1e1e1e", bd=4, relief=tk.SUNKEN) #we use a sunked frame because skeoumorphism is cool, and its 2012 again
+249:         display_frame.pack(fill=tk.X, padx=14, pady=(14, 8))
+250: 
+251:         # Expression / status line (top small text)
+252:         self.expr_label = tk.Label(
+253:             display_frame, text="Enter Roman Numeral", anchor="e",
+254:             bg="#1e1e1e", fg="#aaaaaa", font=("Segoe UI", 11), padx=10, pady=2 #graphic design is my passion
+255:         )
+256:         self.expr_label.pack(fill=tk.X)
+257: 
+258:         # Main Roman Numeral display (text)
+259:         self.roman_display = tk.Label(
+260:             display_frame, text="N", anchor="e",
+261:             bg="#1e1e1e", fg="#fffefd", font=("Segoe UI", 26, "bold"), padx=10, pady=4
+262:         )
+263:         self.roman_display.pack(fill=tk.X)
+264: 
+265:         # Live Arabic/Decimal translation bar (bottom green text)
+266:         self.arabic_display = tk.Label(
+267:             display_frame, text="Decimal: 0", anchor="e",
+268:             bg="#1e1e1e", fg="#66bb6a", font=("Segoe UI", 11), padx=10, pady=4 #green is the color of money, and we like money
+269:         )
+270:         self.arabic_display.pack(fill=tk.X)
+271: 
+272:         #grid frame. as for the past 65 years we have just accepted this as peak UX i guess (ref ANITA MK-8)
+273:         keypad_frame = tk.Frame(self.root, bg="#2b2b2b")
+274:         keypad_frame.pack(fill=tk.BOTH, expand=True, padx=14, pady=4)
+275: 
+276:         # 2D Array of Calculator Buttons: (Text, Row, Col, Colour) im using "ti 89" style colors, so grey and white and then also using green and red for contrast
+277:         #i may if so inclined go to a casio style blue, white and black, not sure yet
+278:         buttons = [
+279:             # Row 0: Clear, Backspace, Vinculum brackets, Zero
+280:             ("CLR", 0, 0, "#b71c1c"), ("DEL", 0, 1, "#c62828"),
+281:             ("(",   0, 2, "#455a64"), (")",   0, 3, "#455a64"), ("N (0)", 0, 4, "#455a64"),
+282: 
+283:             # Row 1: High Roman numerals + Power/Root
+284:             ("D",   1, 0, "#f0f0f0"), ("M",   1, 1, "#f0f0f0"),
+285:             ("^",   1, 2, "#8a8f99"), ("SQRT",1, 3, "#8a8f99"), ("/",     1, 4, "#8a8f99"),
+286: 
+287:             # Row 2: Mid Roman numerals + Multiply/Subtract (hehe mid)
+288:             ("L",   2, 0, "#f0f0f0"), ("C",   2, 1, "#f0f0f0"),
+289:             ("S (1/2)", 2, 2, "#8a8f99"), ("*", 2, 3, "#8a8f99"), ("-",   2, 4, "#8a8f99"),
+290: 
+291:             # Row 3: Low Roman numerals + Fractions + Add/Equals
+292:             ("I",   3, 0, "#f0f0f0"), ("V",   3, 1, "#f0f0f0"), ("X",     3, 2, "#f0f0f0"),
+293:             (": (2/12)", 3, 3, "#8a8f99"), ("+", 3, 4, "#8a8f99"),
+294: 
+295:             # Row 4: dot + Negative toggle + Wide Equals button
+296:             (". (1/12)", 4, 0, "#8a8f99"), ("+/-", 4, 1, "#455a64"),
+297:         ]
+298: 
+299:         #alright now we just need to iterate through the buttons and create them, which is pretty standard stuff
+300:         for (text, r, c, color) in buttons:
+301:             btn = tk.Button(
+302:                 keypad_frame, text=text, bg=color,
+303:                 fg="#111111" if color == "#f0f0f0" else "white", #we do this to have black on light
+304:                 activebackground="#616161", activeforeground="white",
+305:                 font=("Segoe UI", 11, "bold"), bd=1, relief=tk.RAISED,
+306:                 command=lambda t=text: self.on_button_click(t)
+307:             )
+308:             btn.grid(row=r, column=c, sticky="nsew", padx=3, pady=3)
+309: 
+310:         # Wide '=' button across columns 2, 3, 4 of Row 4
+311:         eq_btn = tk.Button(
+312:             keypad_frame, text="= (CALCULATE)", bg="#2e7d32", fg="white", #graphic design is my passion, and green is the color of money, and we like money
+313:             activebackground="#43a047", activeforeground="white",
+314:             font=("Segoe UI", 12, "bold"), bd=1, relief=tk.RAISED,
+315:             command=lambda: self.on_button_click("=")
+316:         )
+317:         eq_btn.grid(row=4, column=2, columnspan=3, sticky="nsew", padx=3, pady=3)
+318:         #we do this each time to make sure the buttons are evenly spaced and look nice, as we are not animals
+319:         for i in range(5):
+320:             keypad_frame.rowconfigure(i, weight=1)
+321:             keypad_frame.columnconfigure(i, weight=1)
+322: 
+323:         # and we add this history frame at the bottom
+324:         hist_frame = tk.Frame(self.root, bg="#2b2b2b")
+325:         hist_frame.pack(fill=tk.X, padx=14, pady=(4, 12))
+326: 
+327:         tk.Label(
+328:             hist_frame, text="Calculation History (Roman & Decimal):",
+329:             bg="#2b2b2b", fg="#bbbbbb", font=("Segoe UI", 9, "bold"), anchor="w" #idk default fonts and stuff, im not a typographer
+330:         ).pack(fill=tk.X)
+331: 
+332:         self.history_list = tk.Listbox(
+333:             hist_frame, height=5, bg="#1e1e1e", fg="#e0e0e0",
+334:             font=("Segoe UI", 10), bd=2, relief=tk.SUNKEN
+335:         )
+336:         self.history_list.pack(fill=tk.X, pady=2)
+337: 
+338:     # Update display labels based on current state
+339:     def _update_displays(self): #live display so cool much wow
+340:         shown_text = self.current_input if self.current_input else "N"
+341:         self.roman_display.config(text=shown_text) #we show the current input, or "N" if empty, in the main roman display
+342: 
+343:         # Build top expression line
+344:         if self.first_operand and self.current_operator:
+345:             self.expr_label.config(text="{} {}".format(self.first_operand, self.current_operator))
+346:         else: 
+347:             self.expr_label.config(text="Ready")
+348: 
+349:         # Try live-validating the current input to show its decimal value
+350:         if not self.current_input:
+351:             self.arabic_display.config(text="Decimal: 0", fg="#66bb6a")
+352:         else:
+353:             try:
+354:                 val = self.engine.roman_to_number(self.current_input)
+355:                 self.arabic_display.config(text="Decimal: {:g}".format(val), fg="#66bb6a") #if we can convert it to a number, we show the decimal value in green
+356:             except ValueError as err:
+357:                 # Show syntax hint if currently malformed (e.g. 'IIII')
+358:                 self.arabic_display.config(text=str(err), fg="#ef5350")
+359: 
+360:     def on_button_click(self, label):
+361:         # Extract symbol from labels like "S (1/2)" -> "S"
+362:         symbol = label.split(" ")[0]
+363: 
+364:         #now for the button click handler
+365:         if symbol == "CLR": #we do this for clear
+366:             self.first_operand = ""
+367:             self.current_operator = ""
+368:             self.current_input = ""
+369:             self.just_evaluated = False
+370:             self._update_displays()
+371:             return
+372: 
+373:         if symbol == "DEL": #delete is a bit more complicated, as we have to check if we just evaluated an expression, in which case we clear the input, otherwise we just delete the last character
+374:             if self.just_evaluated:
+375:                 self.current_input = ""
+376:                 self.just_evaluated = False
+377:             else:
+378:                 self.current_input = self.current_input[:-1]
+379:             self._update_displays()
+380:             return
+381: 
+382:         if symbol == "+/-": #then for the negative toggle, we just check if the current input starts with a negative sign, and if it does we remove it, otherwise we add it to the front
+383:             if self.current_input.startswith("-"):
+384:                 self.current_input = self.current_input[1:]
+385:             elif self.current_input and self.current_input != "N":
+386:                 self.current_input = "-" + self.current_input
+387:             self._update_displays()
+388:             return
+389: 
+390:         # Square Root operator
+391:         if symbol == "SQRT":
+392:             target = self.current_input if self.current_input else "N"
+393:             try:
+394:                 rom_res, dec_res = self.engine.evaluate(target, "SQRT") #we take the current input and evaluate it with the square root operator, which is a unary operator
+395:                 log_entry = "SQRT({}) = {}  [{:g}]".format(target, rom_res, dec_res)
+396:                 self.history_list.insert(0, log_entry)
+397:                 self.current_input = rom_res
+398:                 self.first_operand = ""
+399:                 self.current_operator = ""
+400:                 self.just_evaluated = True #we set the just_evaluated flag to true so that the next time the user enters a numeral, it will clear the current input
+401:                 self._update_displays()
+402:             except Exception as e:
+403:                 messagebox.showerror("Calculation Error", str(e)) #finally we catch any errors and show them in a messagebox
+404:             return
+405: 
+406:         # Binary operators (+, -, *, /, ^)
+407:         if symbol in ('+', '-', '*', '/', '^'):
+408:             if not self.current_input:
+409:                 self.current_input = "N"
+410:             try:
+411:                 # Validate first operand before locking it in
+412:                 self.engine.roman_to_number(self.current_input)
+413:                 self.first_operand = self.current_input
+414:                 self.current_operator = symbol
+415:                 self.current_input = ""
+416:                 self.just_evaluated = False
+417:                 self._update_displays()
+418:             except Exception as e:
+419:                 messagebox.showwarning("Invalid Roman Numeral", str(e)) #same thing here, we catch any errors and show them in a messagebox
+420:             return
+421: 
+422:         # Equals (=)
+423:         if symbol == "=":
+424:             if not self.first_operand or not self.current_operator: #now we check if we have a first operand and an operator, if not we just return
+425:                 return
+426:             second_operand = self.current_input if self.current_input else "N" #if the current input is empty, we treat it as "N" (zero)
+427:             try:
+428:                 rom_res, dec_res = self.engine.evaluate(
+429:                     self.first_operand, self.current_operator, second_operand
+430:                 ) #we then evaluate the expression with the first operand, operator, and second operand, and get the result in both roman and decimal form
+431:                 log_entry = "{} {} {} = {}  [{:g}]".format(
+432:                     self.first_operand, self.current_operator, second_operand, rom_res, dec_res
+433:                 ) #finally we log the calculation in the history list, and update the displays with the result
+434:                 self.history_list.insert(0, log_entry)
+435:                 self.expr_label.config(text="{} {} {} =".format(
+436:                     self.first_operand, self.current_operator, second_operand
+437:                 )) #we update the expression label to show the current calculation
+438:                 self.current_input = rom_res
+439:                 self.first_operand = ""
+440:                 self.current_operator = ""
+441:                 self.just_evaluated = True
+442:                 self.roman_display.config(text=rom_res)
+443:                 self.arabic_display.config(text="Decimal: {:g}".format(dec_res), fg="#66bb6a") #green again
+444:             except Exception as e:
+445:                 messagebox.showerror("Calculation Error", str(e))
+446:             return
+447: 
+448:         # Otherwise, it's a Roman numeral character (I, V, X, L, C, D, M, (, ), N, S, :, .)
+449:         if self.just_evaluated:
+450:             self.current_input = ""
+451:             self.just_evaluated = False
+452: 
+453:         if symbol == "N": #if the user enters "N" (zero), we reset the current input to "N"
+454:             self.current_input = "N"
+455:         else:
+456:             if self.current_input == "N":
+457:                 self.current_input = symbol
+458:             else:
+459:                 self.current_input += symbol #we append the symbol to the current input, which is a string
+460: 
+461:         self._update_displays() #and we are done
+462: 
+463: 
+464: if __name__ == "__main__":
+465:     engine = CalculatorMain()
+466: 
+467:     #we launch the GUI
+468:     try:
+469:         root = tk.Tk()
+470:         app = RomanCalculatorGUI(root, engine)
+471:         root.mainloop()
+472:     except tk.TclError: #in the event of headless
+473:         print("No desktop display found")
+474:         print("    Use engine.evaluate(num1, op, num2) directly in notebook cells.") #(me when i SSH into my house because the uni pc is that bad)
