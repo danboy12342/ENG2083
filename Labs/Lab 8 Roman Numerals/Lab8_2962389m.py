@@ -229,7 +229,7 @@ class RomanCalculatorGUI:
     def __init__(self, root, engine): #we do a base innit 
         self.root = root
         self.engine = engine
-        self.root.title("SPQR - Roman Numeral Desktop Calculator") # Set the title of the window
+        self.root.title("Lab 8") # Set the title of the window
         self.root.geometry("460x620") #define an "REASONABLE WINDOW" im told 4k is still not standard 
         self.root.configure(bg="#2b2b2b") # Set background color to dark gray as we live in the modern age of dark modes
         self.root.resizable(False, False) # Disable window resizing for a fixed layout, this makes my life easier
